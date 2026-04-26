@@ -102,3 +102,4 @@ Předpoklad:
 
 Výpočet:
 3000 / 0,35 = 8571 dní = cca 23 let
+Reálná životnost bude nižší kvůli samovybíjení baterie, teplotě a stárnutí článku.
