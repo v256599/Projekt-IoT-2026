@@ -103,3 +103,13 @@ Předpoklad:
 Výpočet:
 3000 / 0,35 = 8571 dní = cca 23 let
 Reálná životnost bude nižší kvůli samovybíjení baterie, teplotě a stárnutí článku.
+
+## 7. Zdůvodnění dalších parametrů
+### Interval vysílání
+Zařízení nevysílá periodicky. Data jsou odeslána pouze po stisku tlačítka. Tím je zamezeno zbytečné komunikaci i vybíjení baterie.
+
+### Bezpečnost
+Server přijímá pouze zprávy z definovaného zařízení. Lze rozšířit o autentizační token nebo šifrování.
+
+### Spolehlivost
+Každý příkaz vyžaduje potvrzení ACK. Pokud odpověď nedorazí, uživatel je informován chybovou signalizací.
