@@ -101,8 +101,8 @@ Předpoklad:
 - průměrná denní spotřeba cca 0,35 mAh
 
 Výpočet:
-3000 / 0,35 = 8571 dní = cca 23 let
-Reálná životnost bude nižší kvůli samovybíjení baterie, teplotě a stárnutí článku.
+- 3000 / 0,35 = 8571 dní = cca 23 let
+- Reálná životnost bude nižší kvůli samovybíjení baterie, teplotě a stárnutí článku.
 
 ## 7. Zdůvodnění dalších parametrů
 ### Interval vysílání
