@@ -1,4 +1,4 @@
-# Popis technického řešení: Bezdrátový ovladač vjezdových vrat
+# Bezdrátový ovladač vjezdových vrat
 
 ## 1. Popis aplikace
 Cílem projektu je naprogramovat a zprovoznit bezdrátový ovladač pro otevírání a ovládání vjezdové brány. Zařízení je určeno pro mobilní scénáře, tedy např. do vozidla. Zákazník požaduje možnost otevření brány zařízením odkudkoliv. Zákazník vyžaduje fyzické zařízení. Systém bude napájen z baterie a poskytuje obousměrnou komunikaci – po stisku tlačítka na zařízení bude odeslána zpráva na vzdálený server s příkazem a po realizaci příkazu dojde k zaslání odpovědi od vzdáleného serveru. O úspěchu/neúspěchu otevření bude uživatel informován pomocí světelné indikace LED.
