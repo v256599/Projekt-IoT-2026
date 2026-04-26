@@ -101,4 +101,4 @@ Předpoklad:
 - průměrná denní spotřeba cca 0,35 mAh
 
 Výpočet:
-3000 / 0,35 = 8571 dní
+3000 / 0,35 = 8571 dní = 23 let
