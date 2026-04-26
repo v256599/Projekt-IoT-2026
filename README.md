@@ -1,31 +1,104 @@
 # Bezdrátový ovladač vjezdových vrat
 
 ## 1. Popis aplikace
-Cílem projektu je naprogramovat a zprovoznit bezdrátový ovladač pro otevírání a ovládání vjezdové brány. Zařízení je určeno pro mobilní scénáře, tedy např. do vozidla. Zákazník požaduje možnost otevření brány zařízením odkudkoliv. Zákazník vyžaduje fyzické zařízení. Systém bude napájen z baterie a poskytuje obousměrnou komunikaci – po stisku tlačítka na zařízení bude odeslána zpráva na vzdálený server s příkazem a po realizaci příkazu dojde k zaslání odpovědi od vzdáleného serveru. O úspěchu/neúspěchu otevření bude uživatel informován pomocí světelné indikace LED.
+Cílem projektu je navrhnout, naprogramovat a zprovoznit bezdrátový ovladač pro otevírání a ovládání vjezdové brány. Zařízení je určeno pro mobilní scénáře, například pro použití ve vozidle. Uživatel požaduje možnost otevření brány odkudkoliv bez nutnosti použití mobilní aplikace, přičemž je vyžadováno samostatné fyzické zařízení.
+
+Systém je napájen z baterie a využívá obousměrnou komunikaci. Po stisku tlačítka na zařízení je odeslán požadavek na vzdálený server, který následně provede požadovanou akci (otevření / zavření brány) a odešle zpětnou odpověď. O výsledku operace je uživatel informován pomocí LED signalizace.
+
+---
 
 ## 2. Využité komponenty
-* **Řídící mikrokontrolér (MCU):** 
-* **Komunikační modul:** 
-* **Uživatelské rozhraní:** Tlačítko (vstup) a indikační LED (výstup)
+
+- **Řídící mikrokontrolér (MCU):** Raspberry Pi RP2040  
+- **Komunikační modul:** Quectel BG77  
+- **Uživatelské rozhraní:** Tlačítko (vstup) a RGBW LED (výstup)  
+- **Napájení:** Bateriový zdroj  
+- **SIM karta:** Vodafone IoT SIM s APN `lpwa.vodafone.iot`
+
+---
 
 ## 3. Zvolená technologie a anténa
-Pro komunikaci byla zvolena technologie **NB-IoT**. 
-* **Zdůvodnění volby:** Zákazník požaduje spolehlivé otevření brány odkudkoliv. Technologie s krátkým dosahem by tento požadavek nesplnily bez nutnosti dedikované mobilní brány ve vozidle. Volba technologie splňuje požadavek využití bezdrátové technologie a zohledňuje mobilní scénář.
-* **Zvolená anténa:** 
+
+Pro komunikaci byla zvolena technologie **NB-IoT**.
+
+### Zdůvodnění volby
+Zákazník požaduje spolehlivé otevření brány odkudkoliv. Technologie krátkého dosahu, například Bluetooth nebo Wi-Fi, by tento požadavek nesplnily bez nutnosti další infrastruktury. NB-IoT umožňuje komunikaci přes mobilní síť s velmi nízkou spotřebou energie, vysokým dosahem a dobrou prostupností signálu.
+
+Technologie je vhodná zejména pro zařízení, která většinu času spí a pouze občas odesílají krátké zprávy.
+
+### Zvolená anténa
+Byla použita externí LTE / NB-IoT anténa s SMA konektorem určená pro pásma používaná mobilními operátory v České republice.
+
+### Zdůvodnění volby antény
+Externí anténa poskytuje vyšší citlivost a stabilnější příjem signálu než integrované PCB antény. To je důležité zejména při použití ve vozidle nebo v místech s horším pokrytím.
+
+---
 
 ## 4. Zvolený transportní a aplikační protokol
-* **Transportní protokol:** UDP.
-    * **Zdůvodnění:** Je vhodné preferovat protokoly založené na UDP z důvodu minimalizace přeneseného objemu dat, který je zpoplatněn. UDP snižuje síťovou režii a zkracuje dobu aktivního vysílání, což pozitivně ovlivňuje životnost baterie.
-* **Aplikační protokol:** Vlastní implementace nad UDP.
-    * **Zdůvodnění a popis protokolu:** Z důvodu maximální úspory dat byla vytvořena vlastní implementace. Protokol funguje jako stavový automat: po stisku tlačítka se odešle paket a MCU spustí časovač. Pokud ze vzdáleného serveru nedorazí potvrzovací zpráva do nastaveného limitu, je operace vyhodnocena jako neúspěšná. Před každou zprávou je ověřena registrace do sítě příkazem AT+CEREG?.
+
+### Transportní protokol: UDP
+
+#### Zdůvodnění
+Byl zvolen protokol UDP, protože přenáší minimální množství režijních dat oproti TCP. Díky tomu se snižuje objem přenesených dat, zkracuje doba aktivního vysílání modemu a prodlužuje životnost baterie.
+
+UDP je vhodný pro krátké jednorázové zprávy typu příkaz / potvrzení.
+
+### Aplikační protokol: vlastní implementace nad UDP
+
+#### Popis protokolu
+1. Uživatel stiskne tlačítko.
+2. MCU ověří registraci modemu do sítě příkazem `AT+CEREG?`
+3. Odešle paket `OPEN_GATE`
+4. Spustí časovač pro čekání na odpověď.
+5. Pokud server vrátí `ACK`, operace je úspěšná.
+6. Pokud odpověď nedorazí do timeoutu, operace je vyhodnocena jako neúspěšná.
+
+### Signalizace LED
+
+- **Modrá:** probíhá komunikace  
+- **Zelená:** operace úspěšná  
+- **Červená:** chyba / timeout  
+
+---
 
 ## 5. Zvolená baterie
-* **Typ baterie:** 
-* **Zdůvodnění:** Byla zvolena vhodná napájecí baterie pro dané zařízení s ohledem na požadavky. Nabízí adekvátní vlastnosti pro zařízení, které většinu času tráví v režimu spánku a vyžaduje stabilní napětí pro občasné vysílání.
+
+### Typ baterie
+Li-Ion akumulátor 3,7 V / 3000 mAh
+
+### Zdůvodnění volby
+Li-Ion akumulátor nabízí:
+
+- vysokou energetickou hustotu  
+- možnost opakovaného nabíjení  
+- malé rozměry  
+- nízké samovybíjení  
+- vhodné proudové zatížení pro krátkodobé špičky modemu při vysílání
+
+Kapacita 3000 mAh je dostatečná pro dlouhodobý provoz zařízení.
+
+---
 
 ## 6. Implementace úspory energie a kalkulace životnosti
-* **Implementace:** Byly implementovány vhodné režimy úspory energie. MCU po vyřízení požadavku a zhasnutí indikační LED přechází do režimu spánku a probouzí se výhradně externím přerušením od tlačítka. Modem využívá funkci **PSM (Power Saving Mode)**.
-* **Kalkulace:** 
 
-## 7. Zdůvodnění dalších parametrů
-* **Interval vysílání:** Zařízení nevysílá periodicky, čímž je zamezeno odesílání v nekonečné smyčce. Vysílání probíhá výhradně na základě stisku tlačítka, což je hlavní důvod pro úsporu energie.
+### Implementace úspory energie
+
+Byly použity následující metody:
+
+- MCU přechází po dokončení komunikace do režimu spánku
+- Probuzení probíhá pouze stiskem tlačítka
+- LED svítí pouze krátkou dobu po operaci
+- Modem využívá režim **PSM (Power Saving Mode)**
+- Zařízení nevysílá periodicky
+
+### Odhad životnosti
+
+Předpoklad:
+
+- klidový proud zařízení: 0,2 mA  
+- 5 otevření brány denně  
+- aktivní komunikace 10 s / den  
+- průměrná denní spotřeba cca 0,35 mAh
+
+Výpočet:
+3000 / 0,35 = 8571 dní
