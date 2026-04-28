@@ -19,15 +19,23 @@ Systém je napájen z baterie a využívá obousměrnou komunikaci. Po stisku tl
 
 ## 3. Zvolená technologie a anténa
 
-Pro komunikaci byla zvolena technologie **NB-IoT**.
+Pro komunikaci byla zvolena technologie **LTE Cat-M1 (LTE-M)**.
 
 ### Zdůvodnění volby
-Zákazník požaduje spolehlivé otevření brány odkudkoliv. Technologie krátkého dosahu, například Bluetooth nebo Wi-Fi, by tento požadavek nesplnily bez nutnosti další infrastruktury. NB-IoT umožňuje komunikaci přes mobilní síť s velmi nízkou spotřebou energie, vysokým dosahem a dobrou prostupností signálu.
+Zákazník požaduje spolehlivé otevření brány odkudkoliv, včetně mobilního použití ve vozidle. Technologie krátkého dosahu, například Bluetooth nebo Wi-Fi, by tento požadavek nesplnily bez nutnosti další infrastruktury.
+
+LTE Cat-M je vhodnější než NB-IoT zejména díky:
+
+- podpoře mobility a handover při pohybu zařízení  
+- nižší latenci komunikace  
+- lepší podpoře roamingu  
+- stále velmi nízké spotřebě energie  
+- dostatečnému pokrytí v mobilních sítích
 
 Technologie je vhodná zejména pro zařízení, která většinu času spí a pouze občas odesílají krátké zprávy.
 
 ### Zvolená anténa
-Byla použita externí LTE / NB-IoT anténa s SMA konektorem určená pro pásma používaná mobilními operátory v České republice.
+Byla použita externí LTE anténa s SMA konektorem určená pro pásma používaná mobilními operátory v České republice.
 
 ### Zdůvodnění volby antény
 Externí anténa poskytuje vyšší citlivost a stabilnější příjem signálu než integrované PCB antény. To je důležité zejména při použití ve vozidle nebo v místech s horším pokrytím.
@@ -43,73 +51,12 @@ Byl zvolen protokol UDP, protože přenáší minimální množství režijních
 
 UDP je vhodný pro krátké jednorázové zprávy typu příkaz / potvrzení.
 
-### Aplikační protokol: vlastní implementace nad UDP
+### Aplikační protokol: JSON nad UDP
 
-#### Popis protokolu
-1. Uživatel stiskne tlačítko.
-2. MCU ověří registraci modemu do sítě příkazem `AT+CEREG?`
-3. Odešle paket `OPEN_GATE`
-4. Spustí časovač pro čekání na odpověď.
-5. Pokud server vrátí `ACK`, operace je úspěšná.
-6. Pokud odpověď nedorazí do timeoutu, operace je vyhodnocena jako neúspěšná.
+#### Zdůvodnění
+Byl zvolen jednoduchý vlastní aplikační protokol využívající formát JSON. Ten umožňuje snadné rozšíření systému o další příkazy, identifikaci zařízení nebo doplnění bezpečnostních prvků.
 
-### Signalizace LED
+#### Formát zprávy odesílané ze zařízení
 
-- **Modrá:** probíhá komunikace  
-- **Zelená:** operace úspěšná  
-- **Červená:** chyba / timeout  
-
----
-
-## 5. Zvolená baterie
-
-### Typ baterie
-Li-Ion akumulátor 3,7 V / 3000 mAh
-
-### Zdůvodnění volby
-Li-Ion akumulátor nabízí:
-
-- vysokou energetickou hustotu  
-- možnost opakovaného nabíjení  
-- malé rozměry  
-- nízké samovybíjení  
-- vhodné proudové zatížení pro krátkodobé špičky modemu při vysílání
-
-Kapacita 3000 mAh je dostatečná pro dlouhodobý provoz zařízení.
-
----
-
-## 6. Implementace úspory energie a kalkulace životnosti
-
-### Implementace úspory energie
-
-Byly použity následující metody:
-
-- MCU přechází po dokončení komunikace do režimu spánku
-- Probuzení probíhá pouze stiskem tlačítka
-- LED svítí pouze krátkou dobu po operaci
-- Modem využívá režim **PSM (Power Saving Mode)**
-- Zařízení nevysílá periodicky
-
-### Odhad životnosti
-
-Předpoklad:
-
-- klidový proud zařízení: 0,2 mA  
-- 5 otevření brány denně  
-- aktivní komunikace 10 s / den  
-- průměrná denní spotřeba cca 0,35 mAh
-
-Výpočet:
-- 3000 / 0,35 = 8571 dní = cca 23 let
-- Reálná životnost bude nižší kvůli samovybíjení baterie, teplotě a stárnutí článku.
-
-## 7. Zdůvodnění dalších parametrů
-### Interval vysílání
-Zařízení nevysílá periodicky. Data jsou odeslána pouze po stisku tlačítka. Tím je zamezeno zbytečné komunikaci i vybíjení baterie.
-
-### Bezpečnost
-Server přijímá pouze zprávy z definovaného zařízení. Lze rozšířit o autentizační token nebo šifrování.
-
-### Spolehlivost
-Každý příkaz vyžaduje potvrzení ACK. Pokud odpověď nedorazí, uživatel je informován chybovou signalizací.
+```json
+{"action":"toggle","token":123456}
