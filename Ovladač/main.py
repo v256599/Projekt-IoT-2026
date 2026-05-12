@@ -2,6 +2,7 @@ import machine
 import time
 import neopixel
 import BG77
+import config  
 
 # HARDWARE KONFIGURACE
 modem_en = machine.Pin(9, machine.Pin.OUT, value=0)       # MOD_EN
@@ -11,18 +12,11 @@ np = neopixel.NeoPixel(machine.Pin(16), 3, bpp=4)          # RGBW LED
 uart0 = machine.UART(0, baudrate=115200, tx=machine.Pin(0), rx=machine.Pin(1))
 module = None
 
-# SÍŤOVÁ KONFIGURACE
-# Server 
-APN = "lpwa.vodafone.iot"
-SERVER_IP = "147.229.148.105"
-SERVER_PORT = 7004
-# Autentizační token ze serveru
-TOKEN = 123456
-# Akce: open / close / toggle
+
 ACTION = "toggle"
 
-# JSON zpráva pro server
-MESSAGE = '{"action":"%s","token":%d}' % (ACTION, TOKEN)
+# JSON msg for server
+MESSAGE = '{"action":"%s","token":%d}' % (ACTION, config.TOKEN)
 
 
 # LED FUNKCE
@@ -74,18 +68,17 @@ def init_modem():
     
     global module
     module = BG77.BG77(uart0, verbose=True)
-    
-
 
     module.sendCommand("AT+CMEE=2\r\n", timeout=2)
     module.sendCommand('AT+QPSMS=1,,,"00111000","00000011"\r\n', timeout=5)  # nastavení PSM 24h/6s
     module.sendCommand('AT+QPTWEDRXS=0\r\n', timeout=5)     # vypnout eDRX 
     module.sendCommand('AT+QPSMS?\r\n')
+    
     if not check_sim():
         return False
 
     print("Nastavuji APN...")
-    if not module.setAPN(APN):
+    if not module.setAPN(config.APN):
         print("Chyba: APN se nepodařilo nastavit.")
         return False
 
@@ -132,13 +125,11 @@ def init_modem():
 def send_gate_command():
     set_color(0, 0, 50, 0)  # modrá = komunikace
     
-    if not module.testAT(): #start modem kdyz nebezi
+    if not module.testAT(): # start modem kdyz nebezi
        modem_en.high()
        time.sleep(0.3)
        modem_en.low()
        time.sleep(3)
-        
-
 
     print("Kontroluji registraci před odesláním...")
 
@@ -157,7 +148,8 @@ def send_gate_command():
     try:
         print("Otevírám UDP socket...")
 
-        if not sock.connect(SERVER_IP, SERVER_PORT):
+        # Použití IP a portu z configu
+        if not sock.connect(config.SERVER_IP, config.SERVER_PORT):
             print("Chyba: nepodařilo se otevřít UDP socket.")
             sock.close()
             return False
@@ -201,11 +193,11 @@ print("Start zařízení...")
 
 if init_modem():
     print("Zařízení připraveno.")
-    set_color(0, 100, 0, 0) #green
+    set_color(0, 100, 0, 0) # green
     time.sleep(1)
 else:
     print("Inicializace selhala.")
-    set_color(100, 0, 0, 0) #red
+    set_color(100, 0, 0, 0) # red
 
     while True:
         time.sleep(1)
@@ -230,4 +222,4 @@ while True:
         while btn.value() == 0:
             time.sleep_ms(50)
 
-    time.sleep_ms(100)  
+    time.sleep_ms(100)
