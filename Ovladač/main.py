@@ -148,7 +148,7 @@ def send_gate_command():
     try:
         print("Otevírám UDP socket...")
 
-        # Použití IP a portu z configu
+        
         if not sock.connect(config.SERVER_IP, config.SERVER_PORT):
             print("Chyba: nepodařilo se otevřít UDP socket.")
             sock.close()
