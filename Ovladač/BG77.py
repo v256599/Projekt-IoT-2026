@@ -203,6 +203,8 @@ class BG77:
                 ret += self.__read(exit_condition="\r\n", timeout=1)
                 ret.strip("\r\n")
             data = ret.strip("+CEREG: ")
+            data = data.strip("OK")
+            data = data.strip("\r\n")
             data = data.split(",")
             if data[1] == '1' or data[1] == '5':
                 if data[0] == '4':
@@ -661,3 +663,11 @@ class BG77Socket:
             hex_str += f"{ord(c):x}"
         return hex_str
         
+
+
+
+    
+
+
+
+
