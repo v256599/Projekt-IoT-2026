@@ -35,10 +35,7 @@ LTE Cat-M bylo zvoleno z těchto důvodů:
 Technologie je vhodná pro zařízení, která většinu času spí a pouze občas odesílají krátké zprávy.
 
 ### Zvolená anténa
-Byla použita externí LTE anténa s SMA konektorem určená pro pásma využívaná operátory v České republice.
-
-### Zdůvodnění volby antény
-Externí anténa poskytuje vyšší citlivost a stabilnější příjem signálu než integrované PCB antény. To je důležité zejména při použití ve vozidle nebo v místech s horším pokrytím.
+Pro náš projekt jsme zvolili flexibilní FPC anténu [Quectel YF0028AA](https://www.tme.eu/cz/details/yf0028aa/anteny-gsm/quectel-wireless-solutions-co-ltd/).Anténa je optimalizována pro Sub-GHz pásma (a tedy sítě NB-IoT/LTE-M). Díky své minimální tloušťce a ohebnosti ji lze snadno nalepit přímo na vnitřní stěnu kompaktního krytu ovladače.  Výhodou také je, že jde o originální příslušenství přímo od výrobce modemu Quectel.
 
 ---
 
