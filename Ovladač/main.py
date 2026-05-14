@@ -13,12 +13,6 @@ uart0 = machine.UART(0, baudrate=115200, tx=machine.Pin(0), rx=machine.Pin(1))
 module = None
 
 
-ACTION = "toggle"
-
-# JSON msg for server
-MESSAGE = '{"action":"%s","token":%d}' % (ACTION, config.TOKEN)
-
-
 # LED FUNKCE
 def set_color(r, g, b, w=0):
     np[0] = (r, g, b, w)
@@ -29,7 +23,7 @@ def set_color(r, g, b, w=0):
 def check_sim():
     print("Kontroluji SIM kartu...")
 
-    cpin = module.sendCommand("AT+CPIN?\r\n", timeout=3)
+    cpin = module.sendCommand("AT+CPIN?\r\n", timeout=3) #Get stav SIM karty
     print(cpin)
 
     if "+CPIN: READY" in cpin:
@@ -38,13 +32,13 @@ def check_sim():
 
     print("SIM karta není připravena, restartuji rádio...")
 
-    module.sendCommand("AT+CFUN=0\r\n", timeout=5)
+    module.sendCommand("AT+CFUN=0\r\n", timeout=5) #Vypnout radio
     time.sleep(2)
 
-    module.sendCommand("AT+CFUN=1\r\n", timeout=10)
+    module.sendCommand("AT+CFUN=1\r\n", timeout=10) #Zapnout radio
     time.sleep(5)
 
-    cpin = module.sendCommand("AT+CPIN?\r\n", timeout=3)
+    cpin = module.sendCommand("AT+CPIN?\r\n", timeout=3) #Get stav SIM
     print(cpin)
 
     if "+CPIN: READY" in cpin:
@@ -61,7 +55,7 @@ def init_modem():
     
     set_color(50, 30, 0, 0)  # oranžová
     
-    modem_en.high()
+    modem_en.high() #Nahodit modem
     time.sleep(0.3)
     modem_en.low()
     time.sleep(3)
@@ -69,10 +63,10 @@ def init_modem():
     global module
     module = BG77.BG77(uart0, verbose=True)
 
-    module.sendCommand("AT+CMEE=2\r\n", timeout=2)
-    module.sendCommand('AT+QPSMS=1,,,"00111000","00000011"\r\n', timeout=5)  # nastavení PSM 24h/6s
+    module.sendCommand("AT+CMEE=2\r\n", timeout=2) #Zapnout debbugg od modemu
+    module.sendCommand('AT+QPSMS=1,,,"00111000","00000000"\r\n', timeout=5)  # nastavení PSM 24h/6s
     module.sendCommand('AT+QPTWEDRXS=0\r\n', timeout=5)     # vypnout eDRX 
-    module.sendCommand('AT+QPSMS?\r\n')
+    module.sendCommand('AT+QPSMS?\r\n') #GET PSM values
     
     if not check_sim():
         return False
@@ -86,7 +80,7 @@ def init_modem():
     module.setRATType(BG77.RAT_CAT_M_ONLY)
 
     print("Nastavuji Vodafone operátora...")
-    cops = module.sendCommand("AT+COPS=1,2,23003\r\n", timeout=60)
+    cops = module.sendCommand("AT+COPS=1,2,23003\r\n", timeout=60) 
     print(cops)
 
     print("Čekám na registraci do sítě...")
@@ -106,7 +100,7 @@ def init_modem():
     module.attachToNetwork()
 
     print("Aktivuji PDP kontext...")
-    qiact = module.sendCommand("AT+QIACT=1\r\n", timeout=20)
+    qiact = module.sendCommand("AT+QIACT=1\r\n", timeout=20) #Get IP and enable TCP/IP comm
     print(qiact)
 
     print("Kontroluji PDP kontext...")
@@ -122,7 +116,9 @@ def init_modem():
 
 
 # ODESLÁNÍ PŘÍKAZU
-def send_gate_command():
+def send_gate_command(action_type):
+    message = '{"action":"%s","token":%d}' % (action_type, config.TOKEN)
+
     set_color(0, 0, 50, 0)  # modrá = komunikace
     
     if not module.testAT(): # start modem kdyz nebezi
@@ -131,11 +127,21 @@ def send_gate_command():
        modem_en.low()
        time.sleep(3)
        module.setEcho(False)
+       
 
     print("Kontroluji registraci před odesláním...")
 
-    if not module.isRegistered():
-        print("Chyba: modem není registrován v síti.")
+    connected = False
+    
+    for i in range(0,15):
+        if module.isRegistered():
+            connected = True
+            break
+        time.sleep(1)
+            
+    
+    if not connected:         
+        print("Chyba: modem není registrován v síti.") 
         return False
 
     result, sock = module.socket(BG77.AF_INET, BG77.SOCK_DGRAM)
@@ -155,9 +161,9 @@ def send_gate_command():
             sock.close()
             return False
 
-        print("Odesílám JSON:", MESSAGE)
+        print("Odesílám JSON:", message)
 
-        if not sock.send(MESSAGE, rai=2):
+        if not sock.send(message, rai=2):
             print("Chyba: zpráva nebyla odeslána.")
             sock.close()
             return False
@@ -176,6 +182,7 @@ def send_gate_command():
                 return True
 
         print("Server vrátil chybu nebo neplatnou odpověď.")
+        set_color(100, 0, 0, 0) # red
         return False
 
     except Exception as e:
@@ -205,12 +212,14 @@ else:
 
 set_color(0, 0, 0, 0)
 
-
+if send_gate_command("started"):
+    set_color(0, 0, 0, 0)
+    
 # HLAVNÍ SMYČKA
 while True:
     if btn.value() == 0:
-        print("\nStisk tlačítka - odesílám příkaz.")
-        if send_gate_command():
+        print("\nStisk tlačítka - odesílám příkaz TOGGLE.")
+        if send_gate_command("toggle"):
             set_color(0, 100, 0, 0)
             print("Úspěch: příkaz byl potvrzen.")
         else:
