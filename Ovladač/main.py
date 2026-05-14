@@ -130,6 +130,7 @@ def send_gate_command():
        time.sleep(0.3)
        modem_en.low()
        time.sleep(3)
+       module.setEcho(False)
 
     print("Kontroluji registraci před odesláním...")
 
