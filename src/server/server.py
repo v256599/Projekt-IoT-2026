@@ -140,6 +140,8 @@ def start_udp_server():
                         vysledek_akce = brana.close()
                     elif akce == "toggle":
                         vysledek_akce = brana.toggle()
+                    elif akce == "started":
+                        vysledek_akce = "receive"
                     else:
                         print(f"    [-] Neznámá akce: {akce}")
                         response = json.dumps({"successful": False, "error": "Neznama akce"})
